@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            width: 80%;
+            height: 80%;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .left-panel, .right-panel {
+            padding: 20px;
+        }
+
+        .left-panel {
+            width: 40%;
+            background-color: #282828;
+        }
+
+        .right-panel {
+            width: 60%;
+            background-color: #1e1e1e;
+        }
+
+        h1, h2 {
+            margin: 0 0 10px 0;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin: 10px 0 5px 0;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .command-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .command-button:hover {
+            background-color: #0056b3;
+        }
+
+        pre {
+            background-color: #1e1e1e;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-y: scroll;
+            height: 90%;
+            word-wrap: break-word; /* Ensure text wraps */
+            white-space: pre-wrap; /* Ensure text wraps */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>Ollama UI</h1>
+            <form id="commandForm">
+                <label for="containerId">Container ID:</label>
+                <input type="text" id="containerId" name="containerId" required>
+
+                <label for="args">Arguments:</label>
+                <input type="text" id="args" name="args">
+
+                <label for="flags">Flags:</label>
+                <input type="text" id="flags" name="flags">
+
+                <label for="input">Input:</label>
+                <input type="text" id="input" name="input">
+
+                <div class="button-container">
+                    <button type="button" class="command-button" data-command="help">ollama help</button>
+                    <button type="button" class="command-button" data-command="list">ollama list</button>
+                    <button type="button" class="command-button" data-command="ps">ollama ps</button>
+                    <button type="button" class="command-button" data-command="run">ollama run</button>
+                    <button type="button" class="command-button" data-command="pull">ollama pull</button>
+                    <button type="button" class="command-button" data-command="push">ollama push</button>
+                    <button type="button" class="command-button" data-command="cp">ollama cp</button>
+                    <button type="button" class="command-button" data-command="rm">ollama rm</button>
+                    <button type="button" class="command-button" data-command="show">ollama show</button>
+                    <button type="button" class="command-button" data-command="create">ollama create</button>
+                </div>
+            </form>
+        </div>
+        <div class="right-panel">
+            <h2>Output:</h2>
+            <pre id="output"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const commandForm = document.getElementById('commandForm');
+            const outputElement = document.getElementById('output');
+            const commandButtons = document.querySelectorAll('.command-button');
+
+            commandButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const command = button.getAttribute('data-command');
+                    const formData = new FormData(commandForm);
+                    formData.append('command', command);
+
+                    const jsonData = {};
+                    formData.forEach((value, key) => {
+                        jsonData[key] = value;
+                    });
+
+                    fetch('/run-command', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(jsonData),
+                    })
+                        .then(response => response.text())
+                        .then(result => {
+                            outputElement.textContent = `Command: ${command}\n${result}`;
+                        })
+                        .catch(error => {
+                            outputElement.textContent = `Error: ${error}`;
+                        });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

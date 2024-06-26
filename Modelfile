@@ -1,0 +1,14 @@
+FROM tinyllama:latest
+
+TEMPLATE "<|system|>
+{{ .System }}</s>
+<|user|>
+{{ .Prompt }}</s>
+<|assistant|>
+"
+
+SYSTEM You are a helpful AI assistant.
+PARAMETER stop <|system|>
+PARAMETER stop <|user|>
+PARAMETER stop <|assistant|>
+PARAMETER stop </s>
