@@ -13,20 +13,15 @@ app.get('/', (req, res) => {
 });
 
 app.post('/run-command', (req, res) => {
-    const { args, flags, input, command } = req.body;
+    const { containerId, args, flags, input, command } = req.body;
     console.log('Received form data:', req.body);
 
     if (!command) {
         return res.send('Error: Command is required.');
     }
 
-    // Log environment variables
-    console.log('Environment Variables:', process.env);
-    // Log PATH variable
-    console.log('PATH:', process.env.PATH);
-
     // Define the base command with the full path to the ollama binary
-    let cmd = `ollama ${command}`;  // Use `ollama` directly if it's in PATH
+    let cmd = `ollama ${command}`;  // Ensure the `ollama` prefix is included
 
     // Append arguments, flags, and input if they are provided
     if (args) cmd += ` ${args}`;
