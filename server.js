@@ -13,15 +13,20 @@ app.get('/', (req, res) => {
 });
 
 app.post('/run-command', (req, res) => {
-    const { containerId, args, flags, input, command } = req.body;
+    const { args, flags, input, command } = req.body;
     console.log('Received form data:', req.body);
 
-    if (!containerId || !command) {
-        return res.send('Error: Container ID and command are required.');
+    if (!command) {
+        return res.send('Error: Command is required.');
     }
 
+    // Log environment variables
+    console.log('Environment Variables:', process.env);
+    // Log PATH variable
+    console.log('PATH:', process.env.PATH);
+
     // Define the base command with the full path to the ollama binary
-    let cmd = `docker exec ${containerId} /usr/bin/ollama ${command}`;
+    let cmd = `ollama ${command}`;  // Use `ollama` directly if it's in PATH
 
     // Append arguments, flags, and input if they are provided
     if (args) cmd += ` ${args}`;
@@ -32,7 +37,7 @@ app.post('/run-command', (req, res) => {
     console.log('Executing command:', cmd);
 
     exec(cmd, (error, stdout, stderr) => {
-        let response = `Command: ${command}\n`;
+        let response = `Command: ${cmd}\n`; // Include full command in response
         if (args) response += `Arguments: ${args}\n`;
         if (flags) response += `Flags: ${flags}\n`;
         if (input) response += `Input: ${input}\n`;
