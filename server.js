@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/run-command', (req, res) => {
-    const { containerId, args, flags, input, command } = req.body;
+    const { args, flags, input, command } = req.body;
     console.log('Received form data:', req.body);
 
     if (!command) {
