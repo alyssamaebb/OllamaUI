@@ -24,8 +24,8 @@ jobs:
 
     - name: Build and Push Docker image
       run: |
-        docker build -t <your-dockerhub-username>/ollama-ui:latest .
-        docker push <your-dockerhub-username>/ollama-ui:latest
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/ollama-ui:latest .
+        docker push ${{ secrets.DOCKER_USERNAME }}/ollama-ui:latest
 
   deploy:
     needs: build
@@ -42,10 +42,10 @@ jobs:
         sudo mv oc /usr/local/bin/
 
     - name: Log in to OpenShift
-      run: oc login <your-openshift-cluster-url> --token=${{ secrets.OPENSHIFT_TOKEN }}
+      run: oc login ${{ secrets.OPENSHIFT_SERVER }} --token=${{ secrets.OPENSHIFT_TOKEN }}
 
     - name: Deploy to OpenShift
       run: |
-        oc project <your-openshift-project>
-        oc import-image ollama-ui:latest --from=docker.io/<your-dockerhub-username>/ollama-ui:latest --confirm
+        oc project ${{ secrets.OPENSHIFT_PROJECT }}
+        oc import-image ollama-ui:latest --from=docker.io/${{ secrets.DOCKER_USERNAME }}/ollama-ui:latest --confirm
         oc rollout latest dc/ollama-ui
