@@ -21,28 +21,41 @@ app.post('/run-command', (req, res) => {
         return res.send('Error: Command is required.');
     }
 
-    const podName = "<your-pod-name>"; // You may use a dynamic approach to retrieve this
-    let cmd = `oc exec ${podName} -- ollama ${command}`;
-
-    if (args) cmd += ` ${args}`;
-    if (flags) cmd += ` ${flags}`;
-    if (input) cmd += ` ${input}`;
-
-    console.log('Executing command:', cmd);
-
-    exec(cmd, (error, stdout, stderr) => {
-        let response = `Command: ${command}\n`;
-        if (args) response += `Arguments: ${args}\n`;
-        if (flags) response += `Flags: ${flags}\n`;
-        if (input) response += `Input: ${input}\n`;
-
-        response += `Output:\n${stdout || 'No output'}\n`;
-        if (stderr) {
-            const cleanStderr = stderr.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-            response += `Error:\n${cleanStderr}`;
+    // Dynamic approach to retrieve the pod name
+    exec("oc get pods -o jsonpath='{.items[?(@.status.phase==\"Running\")].metadata.name}'", (err, stdout, stderr) => {
+        if (err) {
+            return res.send(`Error retrieving pod name: ${stderr}`);
         }
 
-        res.send(response);
+        const podName = stdout.trim();  // Get the first running pod name
+        if (!podName) {
+            return res.send('Error: No running pod found.');
+        }
+
+        // Construct the command to execute
+        let cmd = `oc exec ${podName} -- ollama ${command}`;
+
+        if (args) cmd += ` ${args}`;
+        if (flags) cmd += ` ${flags}`;
+        if (input) cmd += ` ${input}`;
+
+        console.log('Executing command:', cmd);
+
+        // Execute the command
+        exec(cmd, (error, stdout, stderr) => {
+            let response = `Command: ${command}\n`;
+            if (args) response += `Arguments: ${args}\n`;
+            if (flags) response += `Flags: ${flags}\n`;
+            if (input) response += `Input: ${input}\n`;
+
+            response += `Output:\n${stdout || 'No output'}\n`;
+            if (stderr) {
+                const cleanStderr = stderr.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+                response += `Error:\n${cleanStderr}`;
+            }
+
+            res.send(response);
+        });
     });
 });
 
