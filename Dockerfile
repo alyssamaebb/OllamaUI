@@ -8,13 +8,13 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --production
+RUN npm install
+
+# Install ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Copy the rest of the application
 COPY . .
-
-# Pull the Ollama Docker image and run it in the background
-RUN docker pull ollama/ollama:latest
 
 # Expose the port the app runs on
 EXPOSE 3000
