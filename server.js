@@ -13,15 +13,15 @@ app.get('/', (req, res) => {
 });
 
 app.post('/run-command', (req, res) => {
-    const { args, flags, input, command } = req.body;
+    const { containerId, args, flags, input, command } = req.body;
     console.log('Received form data:', req.body);
 
-    if (!command) {
-        return res.send('Error: Command is required.');
+    if (!containerId || !command) {
+        return res.send('Error: Container ID and command are required.');
     }
 
     // Define the base command with the full path to the ollama binary
-    let cmd = `ollama ${command}`;  // Ensure the `ollama` prefix is included
+    let cmd = `docker exec ${containerId} /usr/bin/ollama ${command}`;
 
     // Append arguments, flags, and input if they are provided
     if (args) cmd += ` ${args}`;
@@ -32,7 +32,7 @@ app.post('/run-command', (req, res) => {
     console.log('Executing command:', cmd);
 
     exec(cmd, (error, stdout, stderr) => {
-        let response = `Command: ${cmd}\n`; // Include full command in response
+        let response = `Command: ${command}\n`;
         if (args) response += `Arguments: ${args}\n`;
         if (flags) response += `Flags: ${flags}\n`;
         if (input) response += `Input: ${input}\n`;
