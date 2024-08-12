@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Meta information about the document -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ollama UI</title>
     <style>
-        /* General body styling */
         body {
             font-family: Arial, sans-serif;
             background-color: #121212;
@@ -18,8 +16,6 @@
             align-items: center;
             height: 100vh;
         }
-
-        /* Container styling */
         .container {
             display: flex;
             flex-direction: row;
@@ -29,38 +25,27 @@
             border-radius: 10px;
             overflow: hidden;
         }
-
-        /* Left and right panel styling */
         .left-panel, .right-panel {
             padding: 20px;
         }
-
         .left-panel {
             width: 40%;
             background-color: #282828;
         }
-
         .right-panel {
             width: 60%;
             background-color: #1e1e1e;
         }
-
-        /* Heading styling */
         h1, h2 {
             margin: 0 0 10px 0;
         }
-
-        /* Form styling */
         form {
             display: flex;
             flex-direction: column;
         }
-
         label {
             margin: 10px 0 5px 0;
         }
-
-        /* Input field styling */
         input[type="text"] {
             padding: 10px;
             border: none;
@@ -69,14 +54,10 @@
             background-color: #333;
             color: #fff;
         }
-
-        /* Button container styling */
         .button-container {
             display: flex;
             flex-wrap: wrap;
         }
-
-        /* Command button styling */
         .command-button {
             background-color: #007bff;
             color: white;
@@ -87,13 +68,9 @@
             cursor: pointer;
             flex: 1;
         }
-
-        /* Command button hover effect */
         .command-button:hover {
             background-color: #0056b3;
         }
-
-        /* Preformatted text styling */
         pre {
             background-color: #1e1e1e;
             color: #00ff00;
@@ -101,8 +78,8 @@
             border-radius: 5px;
             overflow-y: scroll;
             height: 90%;
-            word-wrap: break-word; /* Ensure text wraps */
-            white-space: pre-wrap; /* Ensure text wraps */
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -110,21 +87,13 @@
     <div class="container">
         <div class="left-panel">
             <h1>Ollama UI</h1>
-            <!-- Form for user inputs -->
             <form id="commandForm">
-                <label for="containerId">Container ID:</label>
-                <input type="text" id="containerId" name="containerId" required>
-
                 <label for="args">Arguments:</label>
                 <input type="text" id="args" name="args">
-
                 <label for="flags">Flags:</label>
                 <input type="text" id="flags" name="flags">
-
                 <label for="input">Input:</label>
                 <input type="text" id="input" name="input">
-
-                <!-- Buttons for different commands -->
                 <div class="button-container">
                     <button type="button" class="command-button" data-command="help">ollama help</button>
                     <button type="button" class="command-button" data-command="list">ollama list</button>
@@ -141,35 +110,26 @@
         </div>
         <div class="right-panel">
             <h2>Output:</h2>
-            <!-- Area to display the command output -->
             <pre id="output"></pre>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Get references to the form and output elements
             const commandForm = document.getElementById('commandForm');
             const outputElement = document.getElementById('output');
-            // Get all command buttons
             const commandButtons = document.querySelectorAll('.command-button');
 
-            // Add event listeners to all command buttons
             commandButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    // Get the command from the button's data attribute
                     const command = button.getAttribute('data-command');
-                    // Create a FormData object from the form
                     const formData = new FormData(commandForm);
                     formData.append('command', command);
 
-                    // Convert FormData to JSON
                     const jsonData = {};
                     formData.forEach((value, key) => {
                         jsonData[key] = value;
                     });
 
-                    // Send the command to the server
                     fetch('/run-command', {
                         method: 'POST',
                         headers: {
@@ -179,11 +139,9 @@
                     })
                     .then(response => response.text())
                     .then(result => {
-                        // Display the command output
                         outputElement.textContent = `Command: ${command}\n${result}`;
                     })
                     .catch(error => {
-                        // Display any errors
                         outputElement.textContent = `Error: ${error}`;
                     });
                 });
