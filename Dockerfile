@@ -1,20 +1,23 @@
 # Use an official Node.js runtime as a parent image
 FROM node:14
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy the package.json and package-lock.json files to the working directory
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install any needed packages specified in package.json
+# Install dependencies
 RUN npm install --production
 
-# Copy the rest of the application files to the working directory
+# Copy the rest of the application
 COPY . .
+
+# Pull the Ollama Docker image and run it in the background
+RUN docker pull ollama/ollama:latest
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application
-CMD [ "node", "server.js" ]
+# Define the command to run the app
+CMD ["node", "server.js"]
