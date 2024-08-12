@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const { exec } = require('child_process');
+const https = require('https');
 
 const app = express();
 
@@ -21,42 +22,72 @@ app.post('/run-command', (req, res) => {
         return res.send('Error: Command is required.');
     }
 
-    // Dynamic approach to retrieve the pod name
-    exec("oc get pods -o jsonpath='{.items[?(@.status.phase==\"Running\")].metadata.name}'", (err, stdout, stderr) => {
-        if (err) {
-            return res.send(`Error retrieving pod name: ${stderr}`);
-        }
+    // Function to get the pod name via the Kubernetes API
+    const getPodName = () => {
+        return new Promise((resolve, reject) => {
+            const options = {
+                hostname: 'kubernetes.default.svc',
+                port: 443,
+                path: '/api/v1/namespaces/default/pods',
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${process.env.TOKEN}`,  // Use service account token
+                },
+                rejectUnauthorized: false,  // Ignore SSL certificate validation for simplicity
+            };
 
-        const podName = stdout.trim();  // Get the first running pod name
-        if (!podName) {
-            return res.send('Error: No running pod found.');
-        }
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+                res.on('end', () => {
+                    const podList = JSON.parse(data);
+                    const runningPod = podList.items.find(pod => pod.status.phase === 'Running');
+                    if (runningPod) {
+                        resolve(runningPod.metadata.name);
+                    } else {
+                        reject('No running pod found.');
+                    }
+                });
+            });
 
-        // Construct the command to execute
-        let cmd = `oc exec ${podName} -- ollama ${command}`;
+            req.on('error', (e) => {
+                reject(`Error: ${e.message}`);
+            });
 
-        if (args) cmd += ` ${args}`;
-        if (flags) cmd += ` ${flags}`;
-        if (input) cmd += ` ${input}`;
-
-        console.log('Executing command:', cmd);
-
-        // Execute the command
-        exec(cmd, (error, stdout, stderr) => {
-            let response = `Command: ${command}\n`;
-            if (args) response += `Arguments: ${args}\n`;
-            if (flags) response += `Flags: ${flags}\n`;
-            if (input) response += `Input: ${input}\n`;
-
-            response += `Output:\n${stdout || 'No output'}\n`;
-            if (stderr) {
-                const cleanStderr = stderr.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-                response += `Error:\n${cleanStderr}`;
-            }
-
-            res.send(response);
+            req.end();
         });
-    });
+    };
+
+    getPodName()
+        .then(podName => {
+            let cmd = `oc exec ${podName} -- ollama ${command}`;
+
+            if (args) cmd += ` ${args}`;
+            if (flags) cmd += ` ${flags}`;
+            if (input) cmd += ` ${input}`;
+
+            console.log('Executing command:', cmd);
+
+            exec(cmd, (error, stdout, stderr) => {
+                let response = `Command: ${command}\n`;
+                if (args) response += `Arguments: ${args}\n`;
+                if (flags) response += `Flags: ${flags}\n`;
+                if (input) response += `Input: ${input}\n`;
+
+                response += `Output:\n${stdout || 'No output'}\n`;
+                if (stderr) {
+                    const cleanStderr = stderr.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+                    response += `Error:\n${cleanStderr}`;
+                }
+
+                res.send(response);
+            });
+        })
+        .catch(error => {
+            res.send(`Error retrieving pod name: ${error}`);
+        });
 });
 
 app.listen(3000, () => {
