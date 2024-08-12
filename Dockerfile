@@ -10,14 +10,17 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Install ollama
-RUN curl -fsSL https://ollama.com/install.sh | sh
-
 # Copy the rest of the application
 COPY . .
 
 # Expose the port the app runs on
 EXPOSE 3000
+
+# Set the OLLAMA_HOME environment variable to a writable directory
+ENV OLLAMA_HOME=/tmp/.ollama
+
+# Ensure the directory exists and has appropriate permissions
+RUN mkdir -p /tmp/.ollama && chmod 777 /tmp/.ollama
 
 # Define the command to run the app
 CMD ["node", "server.js"]
