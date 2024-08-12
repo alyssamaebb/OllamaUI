@@ -13,11 +13,12 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
-# Install Ollama
-RUN curl -fsSL https://ollama.com/install.sh | sh
+# Install Ollama into /tmp directory
+RUN curl -fsSL https://ollama.com/install.sh -o /tmp/install-ollama.sh && \
+    sh /tmp/install-ollama.sh --prefix=/tmp/ollama
 
-# Make sure the script has the correct permissions
-RUN chmod +x /usr/local/bin/ollama
+# Add /tmp/ollama/bin to PATH
+ENV PATH="/tmp/ollama/bin:$PATH"
 
 # Expose the port the app runs on
 EXPOSE 3000
